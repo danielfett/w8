@@ -16,7 +16,7 @@ pip3 install git+https://github.com/danielfett/w8.git
 
 Running the software:
 ```
-$ w8.py read_dataset
+$ w8 read_dataset
 INFO:Device Manager:Discovered matching device with address e5:bb:49:af:ff:b5
 INFO:Device [e5:bb:49:af:ff:b5]:Created
 INFO:Device [e5:bb:49:af:ff:b5]:Connected
@@ -34,6 +34,32 @@ INFO:Device [e5:bb:49:af:ff:b5]:Sending command 73
     "flags": 12
 }
 ```
+
+Without additional parameters, the command starts scanning for bluetooth devices until one with the name "W8CARAVAN" is found. 
+The command waits until a matching device is found. To stop the search, press Ctrl+C. It is possible to specify the MAC address of the scale manually:
+
+```
+$ w8 --mac e5:bb:49:af:ff:b5 read_settings
+```
+
+
+## Enabling Bluetooth LE
+
+If the above command does not work out-of-the-box, you might have to enable Bluetooth Low-Energy. 
+
+On Ubuntu, add the following two lines at the bottom of `/etc/bluetooth/main.conf`:
+
+```
+EnableLE=true
+AttributeServer=true
+```
+
+Then restart bluetooth: `sudo service bluetooth restart`
+
+
+## On the Raspberry Pi
+
+This software works on a Raspberry Pi and was tested with the built-in bluetooth device. To use the software as the user `pi` (recommended!), you need to make the dbus policy changes [described here](https://www.raspberrypi.org/forums/viewtopic.php?t=108581#p746917).
 
 ## Available commands
 
