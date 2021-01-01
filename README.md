@@ -1,9 +1,9 @@
 # w8.py - Brunner W8 GasControl Tool
-Software for reading and programming the Brunner W8 GasControl gas scale. 
+Software for reading and programming the [Brunner W8 GasControl](https://www.w8system.it) gas scale. 
 
-Software zum Auslesen und Programmieren der Brunner W8 GasControl Gaswaage. 
+Software zum Auslesen und Programmieren der [Brunner W8 GasControl Gaswaage](https://www.w8system.it). 
 
-**Note:** This software is not endorsed by Brunner and in no way affiliated with the original manufacturer of the device. The information used for the creation of the software and presented below was acquired by observing bluetooth messages. The use of this software is at your own risk. It is possible that the software may damage your hardware. The author assumes no liability in case of damage. 
+**Note:** This software is not supported or endorsed by Brunner and in no way affiliated with the original manufacturer of the device. The information used for the creation of the software and presented below was acquired by observing bluetooth messages. The use of this software is at your own risk. It is possible that the software may damage your hardware. The author assumes no liability in case of damage. See [license](LICENSE) for details.
 
 
 ## Usage
@@ -37,36 +37,44 @@ INFO:Device [e5:bb:49:af:ff:b5]:Sending command 73
 
 ## Available commands
 
-**read_dataset**: Reads a weight measurement from the scale. Data fields returned:
+### `read_dataset`
+
+Reads a weight measurement from the scale. Data fields returned:
 
 | Field               | Description                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| serial              | Serial number of the request/response. Seems to be incremented for each command issued.                                                           |
-| uptime              | Uptime, probably in seconds.                                                                                                                      |
-| measured_weight     | Current weight on the scale, calibrated to show 0 when nothing is on the scale. The tara setting does not influence this value.                   |
-| tara_weight         | Tara weight as programmed into the scale.                                                                                                         |
-| full_weight         | Full weight as programmed.                                                                                                                        |
-| acc_x, acc_y, acc_z | Some scales seem to have an accelleration sensor to cancel out effects of a sloped mount of the scale. For me, the values returned were constant. |
-| temperature         | Temperature of the scale.                                                                                                                         |
-| flags               | Flags, meaning yet unknown.                                                                                                                       |
+| `serial`              | Serial number of the request/response. Seems to be incremented for each command issued.                                                           |
+| `uptime`              | Uptime, probably in seconds.                                                                                                                      |
+| `measured_weight`     | Current weight on the scale, calibrated to show 0 when nothing is on the scale. The tara setting does not influence this value.                   |
+| `tara_weight`         | Tara weight as programmed into the scale.                                                                                                         |
+| `full_weight`         | Full weight as programmed.                                                                                                                        |
+| `acc_x`, `acc_y`, `acc_z` | Some scales seem to have an accelleration sensor to cancel out effects of a sloped mount of the scale. For me, the values returned were constant. |
+| `temperature`         | Temperature of the scale.                                                                                                                         |
+| `flags`               | Flags, meaning yet unknown.                                                                                                                       |
 
-**read_settings**: Read the tara and full weight settings. Data fields returned:
+### `read_settings`
+
+Read the tara and full weight settings. Data fields returned:
 
 | Field       | Description                        |
 | ----------- | ---------------------------------- |
-| tara_weight | Tara weight in grams.              |
-| full_weight | Full weight (gas weight) in grams. |
+| `tara_weight` | Tara weight in grams.              |
+| `full_weight` | Full weight (gas weight) in grams. |
 
-**write_settings**: Write the tara and full weight settings. Expects two parameters, see **read_settings** for details.
+### `write_settings`
+
+Write the tara and full weight settings. Expects two parameters, see **`read_settings`** for details.
 
 
-**read_status**: Read the status of the scale. Data fields returned:
+### `read_status`
+
+Read the status of the scale. Data fields returned:
 
 | Field           | Description                             |
 | --------------- | --------------------------------------- |
-| unknown_1       | Unknown field.                          |
-| battery_percent | Battery capacity estimation in percent. |
-| uptime          | Uptime, probably in seconds.            |
+| `unknown_1`       | Unknown field.                          |
+| `battery_percent` | Battery capacity estimation in percent. |
+| `uptime`          | Uptime, probably in seconds.            |
 
 
 
