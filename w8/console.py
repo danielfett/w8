@@ -2,18 +2,20 @@ import argparse
 import logging
 import json
 
+TIMEOUT = 60
+
+
 def run():
     from . import W8Device, W8DeviceManager
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mac", help="Provide device MAC address, disable scanning.", nargs="?"
     )
     parser.add_argument("-v", help="Enable verbose logging.", action="store_true")
+    parser.add_argument("-vv", help="Enable debug logging.", action="store_true")
     parser.add_argument(
-        "--device",
-        help="Provide name of bluetooth adapter.",
-        default="hci0",
+        "--device", help="Provide name of bluetooth adapter.", default="hci0",
     )
     subparsers = parser.add_subparsers(title="command", dest="command", required=True)
 
@@ -24,15 +26,24 @@ def run():
 
     args = parser.parse_args()
 
-    manager = W8DeviceManager(adapter_name=args.device)
+    manager = W8DeviceManager(adapter_name=args.device, timeout=TIMEOUT)
+
+    def out(data):
+        print(json.dumps(data, indent=4))
 
     def handle_command_result(device, dataset):
-        print(json.dumps(dataset, indent=4))
+        out({
+            'status': 'success',
+            'data': dataset
+        })
         device.disconnect()
         manager.stop()
 
     def handle_error(device, error):
-        print(error)
+        out({
+            'status': 'error',
+            'error_message': str(error)
+        })
         manager.stop()
 
     def handle_ready(device):
@@ -43,13 +54,19 @@ def run():
         )
         device.run_command(command, handle_command_result, *(parameter_values))
 
+    def handle_disconnect(device):
+        pass
+
     manager.cb_ready = handle_ready
     manager.cb_error = handle_error
+    manager.cb_disconnect = handle_disconnect
 
     if args.v:
         log_level = logging.DEBUG
-    else:
+    elif args.vv:
         log_level = logging.INFO
+    else:
+        log_level = logging.ERROR
     logging.basicConfig(level=log_level)
     if args.v:
         logging.getLogger().info("Log level raised to DEBUG.")

@@ -2,6 +2,7 @@ import struct
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Callable, Dict, Optional, Tuple
+from gi.repository import GObject
 
 import gatt
 import logging
@@ -23,21 +24,24 @@ class W8Command:
 class W8DeviceManager(gatt.DeviceManager):
     w8_devices: Dict = {}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, timeout, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = logging.getLogger("Device Manager")
         self.log.debug("Started.")
+        GObject.timeout_add_seconds(timeout, self.stop)
 
     def add_device(self, mac_address):
         self.log.debug("Adding device...")
         device = W8Device(
             cb_ready=self.cb_ready,
             cb_error=self.cb_error,
+            cb_disconnect=self.cb_disconnect,
             mac_address=mac_address,
             manager=self,
         )
         self.w8_devices[mac_address] = device
         device.connect()
+        return device
 
     def device_discovered(self, device):
         if device.alias() == "W8CARAVAN" and device.mac_address not in self.w8_devices:
@@ -45,6 +49,10 @@ class W8DeviceManager(gatt.DeviceManager):
                 f"Discovered matching device with address {device.mac_address}"
             )
             self.add_device(device.mac_address)
+        else:
+            self.log.info(
+                f"Found other device, alias={device.alias()} mac={device.mac_address}"
+            )
 
 
 class W8Device(gatt.Device):
@@ -86,11 +94,7 @@ class W8Device(gatt.Device):
         "READ_STATUS": W8Command(
             opcode=0x53,
             response_format="<BBQ",
-            response_contents=(
-                "unknown_1",
-                "battery_percent",
-                "uptime",
-            ),
+            response_contents=("unknown_1", "battery_percent", "uptime",),
         ),
         # example request:
         # 420abbbbcccc
@@ -108,9 +112,10 @@ class W8Device(gatt.Device):
     command_expected: Optional[W8Command] = None
     response_buffer: Optional[bytes] = None
 
-    def __init__(self, cb_ready, cb_error, *args, **kwargs):
+    def __init__(self, cb_ready, cb_error, cb_disconnect, *args, **kwargs):
         self.cb_ready = cb_ready
         self.cb_error = cb_error
+        self.cb_disconnect = cb_disconnect
         super().__init__(*args, **kwargs)
         self.log = logging.getLogger(f"Device [{self.mac_address}]")
         self.log.info("Created")
@@ -124,9 +129,15 @@ class W8Device(gatt.Device):
         self.log.info(f"Connection failed: {error}")
         self.cb_error(self, error)
 
+    def _connect(self):
+        self.log.debug("Connecting... ")
+        super()._connect()
+
     def disconnect_succeeded(self):
         super().disconnect_succeeded()
+        del self.manager.w8_devices[self.mac_address]
         self.log.info("Disconnected")
+        self.cb_disconnect(self)
 
     def services_resolved(self):
         super().services_resolved()
@@ -172,10 +183,7 @@ class W8Device(gatt.Device):
         self.cb_command_result = callback
         command = self.COMMANDS[command_name]
         preambel_bytes = bytes([command.opcode, 0x0A])
-        parameters_bytes = struct.pack(
-            command.request_format,
-            *params,
-        )
+        parameters_bytes = struct.pack(command.request_format, *params,)
         self.reset_command_buffer(datetime.now(), command)
         self.log.info(f"Sending command {command.opcode}")
         self.write_characteristic.write_value(preambel_bytes + parameters_bytes)
