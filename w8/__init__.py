@@ -64,7 +64,7 @@ class W8Device(gatt.Device):
         #                     0 1 2 3 4 5 6 7 8 9
         "READ_DATASET": W8Command(
             opcode=0x49,
-            response_format="<IQHHHhhhBB",
+            response_format="<IQHHHhhhbB",
             response_contents=(
                 "serial",
                 "uptime",
@@ -237,6 +237,6 @@ class W8Device(gatt.Device):
                 struct.unpack(command.response_format, self.response_buffer),
             )
         )
+        self.cb_command_result(self, self.command_expected, dataset)
         self.reset_command_buffer()
-        self.cb_command_result(self, dataset)
         return True

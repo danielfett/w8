@@ -31,9 +31,15 @@ def run():
     def out(data):
         print(json.dumps(data, indent=4))
 
-    def handle_command_result(device, dataset):
+    def handle_command_result(device, command, dataset):
+        for cmd_name, cmd in W8Device.COMMANDS.items():
+            if cmd is command:
+                command_name = cmd_name.lower()
+                break
+
         out({
             'status': 'success',
+            'command_name':  command_name,
             'data': dataset
         })
         device.disconnect()
